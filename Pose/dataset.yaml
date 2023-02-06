@@ -1,0 +1,14 @@
+path: ../datasets/ut-bgs # dataset root dir
+train: images/train  # train images (relative to 'path')
+val: images/train  # val images (relative to 'path')
+test:  # test images (optional)
+# Classes
+names:
+  0: Foot
+
+# imagename.txt
+# 0 0.5 0.6 0.9 0.5
+#id center x, center y, (percentage), width, height (percentage)
+
+#images/train
+#labels/train
