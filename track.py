@@ -5,16 +5,18 @@ import getopt
 import os.path
  
 argv = sys.argv[1:]
-opts, args = getopt.getopt(argv, 'i:s:e:')
+opts, args = getopt.getopt(argv, 'i:s:e:n:')
 
 VID_PATH = "/home/ash/Downloads/People Walking Free Stock Footage2.mp4"
 START_TIME = 0
 END_TIME = math.inf
+NUM_TO_TRACK = 1
 
 for opt in opts :
     if opt[0] == '-i' : VID_PATH = opt[1]
     if opt[0] == '-s' : START_TIME = int(opt[1])*1000
     if opt[0] == '-e' : END_TIME = int(opt[1])*1000
+    if opt[0] == '-n' : NUM_TO_TRACK = int(opt[1])
 
 tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'MOSSE', 'CSRT']
 tracker_type = tracker_types[6]
@@ -65,6 +67,7 @@ output = cv2.VideoWriter(OUT_PATH, cv2.VideoWriter_fourcc(*'XVID'), 60.0, dim, T
 if not ret:
     print('cannot read the video')
 # Select the bounding box in the first frame
+
 bbox = cv2.selectROI(frame, False)
 ret = tracker.init(frame, bbox)
 # Start tracking
