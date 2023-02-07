@@ -89,10 +89,6 @@ while (video.get(cv2.CAP_PROP_POS_MSEC) <= END_TIME):
     else:
         cv2.putText(frame, "Tracking failure detected", (100,80), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.75,(0,0,255),2)
-    #cv2.putText(frame, tracker_type + " Tracker", (100,20), 
-    #            cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50),2)
-    #cv2.putText(frame, "FPS : " + str(int(fps)), (100,50), 
-    #            cv2.FONT_HERSHEY_SIMPLEX, 0.75, (50,170,50),2)
     cv2.imshow("Tracking", frame)
     output.write(frame)
     k = cv2.waitKey(1) & 0xff

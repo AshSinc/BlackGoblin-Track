@@ -81,6 +81,8 @@ while (video.get(cv2.CAP_PROP_POS_MSEC) <= END_TIME):
 
     success, frame = video.read()
                 
+    maskedFrame = frame.copy()
+
     if not success:
         print('something went wrong')
         break
@@ -88,17 +90,20 @@ while (video.get(cv2.CAP_PROP_POS_MSEC) <= END_TIME):
     timer = cv2.getTickCount()
 
     for tracker in trackers:
-        success, bbox = tracker.update(frame)
+        success, bbox = tracker.update(maskedFrame)
 
         if success:
             p1 = (int(bbox[0]), int(bbox[1]))
             p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+            maskedFrame = cv2.rectangle(frame.copy(), p1, p2, (0,0,0), -1)
             cv2.rectangle(frame, p1, p2, (255,0,0), 2, 1)
+            
         else:
             cv2.putText(frame, "Tracking failure detected", (100,80), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.75,(0,0,255),2)
             
     cv2.imshow("Tracking", frame)
+    cv2.imshow("Tracking Mask", maskedFrame)
     output.write(frame)
     k = cv2.waitKey(1) & 0xff
     if k == 27 : break
