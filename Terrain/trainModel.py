@@ -5,7 +5,6 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Activation, Dropout, Flatten, Dense, BatchNormalization
-#from tensorflow.keras.layers import BatchNormalization
 from keras import backend as K
 from keras import metrics
 from keras.backend import clear_session
@@ -20,7 +19,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 
 from tabulate import tabulate
-from PIL import Image
 import argparse
 
 import common as c
@@ -385,7 +383,7 @@ if __name__ == "__main__":
 
     # Note there is a list of tests, but you can also define only 1 test in the list if you want!
     #listOfTests = [[architectureNumber, epochs, optimiser],]
-    listOfTests = [ [1, 20, "adam1" ],
+    listOfTests = [ [7, 20, "sgd" ],
                   #  [1, 20, "adam2" ],
     #                [1, 20, "sgd" ]
     ]

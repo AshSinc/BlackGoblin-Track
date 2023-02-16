@@ -5,8 +5,7 @@ import keras
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D
-from keras.layers import Activation, Dropout, Flatten, Dense
-from keras.layers.normalization import BatchNormalization
+from keras.layers import Activation, Dropout, Flatten, Dense, BatchNormalization
 from keras import backend as K
 from keras import metrics
 from keras.backend import clear_session
@@ -32,9 +31,10 @@ import common as c
 
 
 if __name__ == "__main__":
-    img_w = 224
-    img_h = 224
-    model_file = "arch1_epochs20_optsgd_best"
+    img_w = 240
+    img_h = 240
+    #model_file = "arch1_epochs20_optsgd_best"
+    model_file = "arch7_epochs20_optsgd"
 
     print("\n\n\n")
     physical_devices = tf.config.experimental.list_physical_devices('GPU')
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
         #tf.keras.backend.set_session(tf.Session(config=config))
 
-    datadir = "Terrain/gtos_keras/train"
+    datadir = "Terrain/gtos_keras/test"
 
     parser = argparse.ArgumentParser(description="Runs a dataset through a model, spits out the list of files with their prediction and label \
                                                     Example: \n \
@@ -64,6 +64,7 @@ if __name__ == "__main__":
     fileList = c.createFileList(datadir)
     samples = len(fileList)
     batch_size = samples
+    batch_size = 16
 
 
     if K.image_data_format() == 'channels_first':
@@ -97,21 +98,26 @@ if __name__ == "__main__":
 
     cm = confusion_matrix(y_true, y_pred, labels=list(test_it.class_indices.values()))
     c.pictureConfusionMatrix(cm, list(test_it.class_indices.keys()))
-    print("The stats for model in {}:".format(model_file))
     f1 = f1_score(y_true, y_pred, average='micro')
     f1_all = f1_score(y_true, y_pred, average=None)
     mcc = matthews_corrcoef(y_true, y_pred)
     acc = accuracy_score(y_true, y_pred, normalize=True)
-    print("Here is the confusion matrix with labels {}".format(list(test_it.class_indices.keys())))
-    print(cm)
-    print("Here is the classification report")
-    print(classification_report(y_true, y_pred, labels=list(test_it.class_indices.values()), target_names=list(test_it.class_indices.keys())))
-    print("End of classification report")
-    print("f1 micro = {} and all {} ".format(f1, f1_all))
-    print("accuracy = {}".format(acc))
-    print("mcc = {}".format(mcc))
+    
+    with open('predictions.txt', 'w') as f:
+        
+        f.writelines("The stats for model in {}:".format(model_file))
+        #f.writelines("Here is the confusion matrix with labels {}".format(list(test_it.class_indices.keys())))
+        #f.writelines(cm)
+        f.writelines("Here is the classification report")
+        f.writelines(classification_report(y_true, y_pred, labels=list(test_it.class_indices.values()), target_names=list(test_it.class_indices.keys())))
+        f.writelines("End of classification report")
+        f.writelines("f1 micro = {} and all {} ".format(f1, f1_all))
+        f.writelines("accuracy = {}".format(acc))
+        f.writelines("mcc = {}".format(mcc))
+        
+        f.writelines("The overall results:")
+        resultsList = list(zip(list(y_files), list(y_pred), list(y_true)))
+        f.writelines(tabulate(resultsList, headers=["file", "prediction", "actual"]))
+        #f.writelines("\n", file=f)
+        
     clear_session()
-
-    print("The overall results:")
-    resultsList = list(zip(list(y_files), list(y_pred), list(y_true)))
-    print(tabulate(resultsList, headers=["file", "prediction", "actual"]))

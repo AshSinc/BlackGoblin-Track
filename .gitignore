@@ -131,3 +131,4 @@ dmypy.json
 /Pose/dataset.json
 
 gtos_keras
+arch*

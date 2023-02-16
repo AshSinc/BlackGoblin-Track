@@ -1,0 +1,5 @@
+datadir             augmentation          Model  epochs      opt    cm00    cm01    cm10      cm11
+------------------  ------------------  -------  --------  -----  ------  ------  ------  --------
+Terrain/gtos_keras  Super simple LeNet       20  sgd         271      21       3      32  0.237023
+
+

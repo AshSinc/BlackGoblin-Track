@@ -7,8 +7,8 @@ import shutil
 ### OUTPUT_DIR = where to copy resulting images
 
 DATA_DIR = "/home/ash/Downloads/gtos/gtos"
-TARGET_SET = DATA_DIR + "/labels/test1.txt" 
-OUTPUT_TYPE = "test"
+TARGET_SET = DATA_DIR + "/labels/train1.txt" 
+OUTPUT_TYPE = "train"
 OUTPUT_DIR = "Terrain/gtos_keras/" + OUTPUT_TYPE
 
 def generateKerasFileStructure() :
