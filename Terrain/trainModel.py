@@ -463,6 +463,7 @@ if __name__ == "__main__":
             )
 
         probabilities = model.predict_generator(generator=test_it)
+        y_pred = np.argmax(probabilities, axis=-1)
         #print(y_pred)
         y_true = test_it.classes
         #print(y_true)

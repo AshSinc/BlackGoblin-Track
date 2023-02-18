@@ -38,12 +38,12 @@ import os.path
 argv = sys.argv[1:]
 opts, args = getopt.getopt(argv, 'i:s:e:n:')
 
-VID_PATH = "./resources/People Walking Free Stock Footage2.mp4"
+VID_PATH = "./resources/People Walking Free Stock Footage.mp4"
 START_TIME = 0
 END_TIME = math.inf
 NUM_TO_TRACK = 1
 
-MODEL_FILE = "arch7_epochs20_optsgd"
+MODEL_FILE = "outputs/models/arch7_epochs20_optsgd"
 
 for opt in opts :
     if opt[0] == '-i' : VID_PATH = opt[1]
@@ -180,7 +180,7 @@ for index, list in enumerate(ypos_tracked):
     ax.plot(list)
     ax.set_ylim(ymin=0)
     #plt.show()
-    plt.savefig('ypos_tracked'+str(index)+'.png', bbox_inches='tight')
+    plt.savefig('outputs/ypos_tracked'+str(index)+'.png', bbox_inches='tight')
 
 f.close()   
 video.release()
