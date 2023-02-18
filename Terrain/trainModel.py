@@ -23,6 +23,8 @@ import argparse
 
 import common as c
 
+import tensorflow_addons as tfa
+
 def modelArchitecture(input_shape, num_classes, architectureNumber):
     print(num_classes)
     if architectureNumber == 0:
@@ -262,6 +264,7 @@ def modelArchitecture(input_shape, num_classes, architectureNumber):
     return model, modelName
 
 def decideDataGeneration(dataGenType=0):
+
     datagen = ImageDataGenerator(
         rescale=1. / 255,
         horizontal_flip=True,
@@ -272,7 +275,9 @@ def decideDataGeneration(dataGenType=0):
 
     if dataGenType == 1:
         datagen= ImageDataGenerator(
-            preprocessing_function=preprocess_input,
+            rescale=1. / 255,
+            preprocessing_function=tfa.image.gaussian_filter2d,
+            #preprocessing_function=preprocess_input,
             width_shift_range=0.2,
             height_shift_range=0.2,
             shear_range=0.2,
@@ -280,6 +285,7 @@ def decideDataGeneration(dataGenType=0):
             #brightness_range=[1.0, 1.15],
             zoom_range=0.2,
             horizontal_flip=True,
+            
             #vertical_flip=True
         )
     if dataGenType == 2: # This one for the test set?
@@ -316,6 +322,7 @@ if __name__ == "__main__":
     img_w = 240
     img_h = 240
     doTheSaving = True
+    OUTPUT_DIR = "outputs"
 
     batch_size = 16
     print("\n\n\n")
@@ -343,8 +350,6 @@ if __name__ == "__main__":
 
     testSamples = len(filelist)
 
-
-
     if K.image_data_format() == 'channels_first':
         print("channels first")
         input_shape = (3, img_w, img_h)
@@ -352,8 +357,8 @@ if __name__ == "__main__":
         print("channels last")
         input_shape = (img_w, img_h, 3)
 
-    datagen = decideDataGeneration(0)
-    datagen_test = decideDataGeneration(2)
+    datagen = decideDataGeneration(1)
+    datagen_test = decideDataGeneration(1)
 
     train_it = datagen.flow_from_directory('{}/train'.format(datadir),
                                            color_mode='rgb',
@@ -383,7 +388,7 @@ if __name__ == "__main__":
 
     # Note there is a list of tests, but you can also define only 1 test in the list if you want!
     #listOfTests = [[architectureNumber, epochs, optimiser],]
-    listOfTests = [ [7, 20, "sgd" ],
+    listOfTests = [ [7, 10, "sgd" ],
                   #  [1, 20, "adam2" ],
     #                [1, 20, "sgd" ]
     ]
@@ -458,14 +463,12 @@ if __name__ == "__main__":
             )
 
         probabilities = model.predict_generator(generator=test_it)
-        #print(probabilities)
-        y_pred = np.argmax(probabilities, axis=-1)
         #print(y_pred)
         y_true = test_it.classes
         #print(y_true)
 
         cm = confusion_matrix(y_true, y_pred, labels=list(test_it.class_indices.values()))
-        c.pictureConfusionMatrix(cm, list(test_it.class_indices.keys()))
+        c.pictureConfusionMatrix(cm, list(test_it.class_indices.keys()), figureName=OUTPUT_DIR+"/confusion_matrix.png")
         print("The stats for {} after {} epochs with {} opt:".format(modelName, epochs, optimiser_name))
         f1 = f1_score(y_true, y_pred, average='micro')
         f1_all = f1_score(y_true, y_pred, average=None)
@@ -487,12 +490,8 @@ if __name__ == "__main__":
 
         theseResults = [(datadir, modelName, epochs, optimiser_name, cm[0][0], cm[0][1], cm[1][0], cm[1][1], f1)]
         print(theseResults)
-        #tryit = tabulate(theseResults, headers=["datadir", "augmentation", "Model", "epochs", "opt", "cm00", "cm01", "cm10", "cm11", "f1"])
-        with open('output.txt', 'a') as f:
+        with open(OUTPUT_DIR+'/output.txt', 'a') as f:
             print(tabulate(theseResults, headers=["datadir", "augmentation", "Model", "epochs", "opt", "cm00", "cm01", "cm10", "cm11", "f1"]), file=f)
-            print("\n", file=f)
-        with open('output_alt.txt', 'a') as f:
-            print(theseResults)
             print("\n", file=f)
 
         if doTheSaving:
@@ -517,7 +516,8 @@ if __name__ == "__main__":
             if saveModel:
                 modelBaseFilename = "arch{}_epochs{}_opt{}".format(architectureNumber, epochs, optimiser_name)
                 print("Saving to {}".format(modelBaseFilename))
-                model.save(modelBaseFilename)
+
+                model.save(OUTPUT_DIR+"/models/"+modelBaseFilename)
                 #model_json = model.to_json()
                 #with open("{}.json".format(modelBaseFilename), "w") as json_file:
                 #    json_file.write(model_json)

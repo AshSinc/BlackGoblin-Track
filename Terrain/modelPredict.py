@@ -20,7 +20,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 
 from tabulate import tabulate
-from PIL import Image
 import argparse
 
 import seaborn as sn
@@ -29,12 +28,15 @@ import matplotlib.pyplot as plt
 
 import common as c
 
+import tensorflow_addons as tfa
+
 
 if __name__ == "__main__":
     img_w = 240
     img_h = 240
     #model_file = "arch1_epochs20_optsgd_best"
     model_file = "arch7_epochs20_optsgd"
+    OUTPUT_DIR = "outputs"
 
     print("\n\n\n")
     physical_devices = tf.config.experimental.list_physical_devices('GPU')
@@ -74,6 +76,15 @@ if __name__ == "__main__":
 
     datagen= ImageDataGenerator(
         rescale=1. / 255,
+        preprocessing_function=tfa.image.gaussian_filter2d,
+        #preprocessing_function=preprocess_input,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        shear_range=0.2,
+        rotation_range=90,
+        #brightness_range=[1.0, 1.15],
+        zoom_range=0.2,
+        horizontal_flip=True,
     )
 
     test_it = datagen.flow_from_directory(datadir,
@@ -103,7 +114,7 @@ if __name__ == "__main__":
     mcc = matthews_corrcoef(y_true, y_pred)
     acc = accuracy_score(y_true, y_pred, normalize=True)
     
-    with open('predictions.txt', 'w') as f:
+    with open(OUTPUT_DIR+'/predictions.txt', 'w') as f:
         
         f.writelines("The stats for model in {}:".format(model_file))
         #f.writelines("Here is the confusion matrix with labels {}".format(list(test_it.class_indices.keys())))

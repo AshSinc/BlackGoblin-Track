@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  bg-track:
+    build: .
+    volumes:
+    - ./:/actual_project_dir:z
+    working_dir: /actual_project_dir
+  
+#$PWD:/tmp
