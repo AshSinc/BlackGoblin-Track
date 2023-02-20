@@ -128,7 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-/Pose/dataset.json
+Pose/dataset.json
 
 gtos_keras
 arch*
+resources/gtos

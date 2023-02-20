@@ -1,5 +1,5 @@
 ###
-#python track_multi.py -s 2 -e 7 -n 2
+#python Track/track_multi_terrain.py -s 2 -e 7 -n 1
 ###
 
 import numpy as np
@@ -36,38 +36,24 @@ import getopt
 import os.path
  
 argv = sys.argv[1:]
-opts, args = getopt.getopt(argv, 'i:s:e:n:')
+opts, args = getopt.getopt(argv, 'i:s:e:n:v:')
+
+MODEL_FILE = "outputs/models/arch7_epochs40_optsgd"
 
 VID_PATH = "./resources/People Walking Free Stock Footage.mp4"
+
 START_TIME = 0
 END_TIME = math.inf
 NUM_TO_TRACK = 1
-
-MODEL_FILE = "outputs/models/arch7_epochs20_optsgd"
 
 for opt in opts :
     if opt[0] == '-i' : VID_PATH = opt[1]
     if opt[0] == '-s' : START_TIME = int(opt[1])*1000
     if opt[0] == '-e' : END_TIME = int(opt[1])*1000
     if opt[0] == '-n' : NUM_TO_TRACK = int(opt[1])
+    if opt[0] == '-v' : VID_PATH = opt[1]
 
-tracker_types = ['BOOSTING', 'MIL','KCF', 'TLD', 'MEDIANFLOW', 'MOSSE', 'CSRT']
-tracker_type = tracker_types[6]
-
-if tracker_type == 'BOOSTING':
-    tracker = cv2.legacy.TrackerBoosting_create()
-if tracker_type == 'MIL':
-    tracker = cv2.TrackerMIL_create() 
-if tracker_type == 'KCF':
-    tracker = cv2.TrackerKCF_create()
-if tracker_type == 'TLD':
-    tracker = cv2.legacy.TrackerTLD_create() 
-if tracker_type == 'MEDIANFLOW':
-    tracker = cv2.legacy.TrackerMedianFlow_create() 
-if tracker_type == 'MOSSE':
-    tracker = cv2.legacy.TrackerMOSSE_create()
-if tracker_type == "CSRT":
-    tracker = cv2.TrackerCSRT_create()
+OUTPUT_PATH = "outputs/track/"
 
 # Get the video file and read it
 video = cv2.VideoCapture(VID_PATH)
@@ -87,7 +73,7 @@ dim = (frame_width, frame_height)
 # Resize the video for a more convenient view
 frame = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
 
-OUT_PATH = ("s{}e{}_{}-0.avi".format(int(START_TIME/1000), int(END_TIME/1000), tracker_type))
+OUT_PATH = (OUTPUT_PATH+"s{}e{}_{}-0.avi".format(int(START_TIME/1000), int(END_TIME/1000), "CRST"))
 #increment output filename number if already exists
 c = 0
 while os.path.exists(OUT_PATH) :
@@ -110,24 +96,26 @@ for x in range(0,NUM_TO_TRACK):
     trackers[x].init(frame, bboxes[x])
     ypos_tracked.append([])
 
-f = open("output-timesteps.txt", "w")
+f = open(OUTPUT_PATH+"output-timesteps.txt", "w")
 model = keras.models.load_model(MODEL_FILE)
 
 # Start tracking
 print("starting")
 
 while (video.get(cv2.CAP_PROP_POS_MSEC) <= END_TIME):
-    success, frame = video.read()
+    success, original_frame = video.read()
+    frame = original_frame.copy()
 
     if not success:
         print('something went wrong')
         break
 
     for index, tracker in enumerate(trackers):
-
+        
         success, bbox = tracker.update(frame)
 
         if success:
+            
             #bounding box around foot
             p1 = (int(bbox[0]), int(bbox[1]))
             p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
@@ -138,10 +126,10 @@ while (video.get(cv2.CAP_PROP_POS_MSEC) <= END_TIME):
             p3 = (p1[0], p2[1] - footheight)
 
             #crop out image
-            crop_img = frame[p2[1]:p3[1], p3[0]:p2[0]].copy()
+            crop_img = original_frame[p2[1]:p3[1], p3[0]:p2[0]]
             if(crop_img.shape[0] < 10 or crop_img.shape[1] < 10) : #if cropped image is only 10 pixels then just take the whole foot box, not great but no time
                 p3 = p1
-                crop_img = frame[p1[1]:p2[1], p1[0]:p2[0]].copy()
+                crop_img = original_frame[p1[1]:p2[1], p1[0]:p2[0]]
             cv2.imshow("crop", crop_img)
 
             #get expected center of foot
@@ -180,7 +168,7 @@ for index, list in enumerate(ypos_tracked):
     ax.plot(list)
     ax.set_ylim(ymin=0)
     #plt.show()
-    plt.savefig('outputs/ypos_tracked'+str(index)+'.png', bbox_inches='tight')
+    plt.savefig(OUTPUT_PATH+'ypos_tracked'+str(index)+'.png', bbox_inches='tight')
 
 f.close()   
 video.release()

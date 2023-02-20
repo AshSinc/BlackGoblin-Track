@@ -1,5 +1,78 @@
 # BlackGoblin-Track
 
+## **Usage**
+
+### **Dataset Prep**
+
+Download GTOS dataset from https://1drv.ms/u/s!AmTf4gl42ObncLmEnEv4R5LyxT4?e=ekkFfX and extract to resources folder. So the structure should appear like this:
+
+```
+resources/
+├── gtos
+│   ├── color_imgs
+│   ├── diff_imgs
+│   └── labels
+```
+
+Then run `python Terrain/convert_gtos_keras_format.py` to convert GTOS into expected layout for training, also reduces the 39 classes to 4 (hard_stone, loose_stone, soft, vegetation) to help improve generalisability. This will output to Terrain/gtos_keras both train and test sets as below:
+
+```
+Terrain/gtos_keras/
+├── test
+│   ├── hard_stone
+│   ├── loose_stone
+│   ├── soft
+│   └── veg
+└── train
+    ├── hard_stone
+    ├── loose_stone
+    ├── soft
+    └── veg
+```
+
+### **Terrain Classifier Training**
+
+The terrain classifier environment requires an updated pip and a number of modules. 
+
+```
+python -m pip install --upgrade pip
+pip install tensorflow scikit-learn tabulate seaborn tensorflow_addons
+```
+
+If you run into problems getting tensorflow installed with GPU acceleration, there is a docker-compose file provided that should help to get a working environment. Run one of the commands below depending on OS. **Note** You may need to modify the volumes path in docker-compose.yml and remove the :z from the end of the path as this is linux specific.
+
+```bash
+# linux
+podman-compose --podman-run-args="--security-opt=label=disable --gpus all --rm" run bg-track
+# windows
+docker compose run --rm bg-track
+```
+
+From either the containerised environment or from your live environment you can now train the model by running `python Terrain/trainModel.py`. Once complete this will save the model to outputs/models for use in the tracker.
+
+### **Tracker with terrain prediction**
+
+**The tracker cannot be run from the container as it has some interactive elements that require a GUI. (still requires tensorflow etc as before, but as the model is already trained GPU accel is not as important)**
+
+The Track/track_multi_terrain.py file contains a variable called **MODEL_FILE**. This should be modified to point to the model output by the trainModel.py step above.
+
+The following command shows an example with switches which are described below. Switches can be ommited to use hard coded values within the script instead.
+
+```bash
+python Track/track_multi_terrain.py -s 2 -e 7 -n 1 -v "./resources/People Walking Free Stock Footage.mp4"
+```
+
+```bash
+-s {number} # start time in seconds
+-e {number} # end time in seconds
+-n {number} # number of objects to track
+-v {string} # relative path to a video file
+```
+
+Upon running the command the first frame will be shown and allow the user to drag a bounding box around a point of interest, press enter to accept. This repeats {n} times. Once all trackers have been set the video will begin to process each frame. Once complete outputs will be stored in the outputs/track directory.
+
+Outputs consist of a txt file where each entry looks like `obj: 0, y: 483, p: [0], t: 2035.3`. This means object 0, ie the first tracked object selected, is at y position 483 pixels, and the ground type below the object is predicted to be class index 0, at time 2035.3 milliseconds. Classes are hard_stone, loose_stone, soft, veg as noted in previous section, indexes are in alphabetical order.
+
 ## **Abstract**
 
 This repository is the result of a short investigation into classification of footwear and ground type, combined with object tracking for the purpose of automatated audio dubbing of footsteps in video.
@@ -46,6 +119,8 @@ So there are two problems here. The dataset does not tell us if the feet themsel
 ............................Ideally we would have panoramic views of every shoe type in varying lighting conditions and then train a classifier on these types. But the dataset does not yet exist.
 
 ## **Ground Type Classification**
+
+Limitations : Note that the model does not yet classify soft materials (sand soil mud etc) accurately. This could likely be improved with more data.
 
 ### **Dataset**
 

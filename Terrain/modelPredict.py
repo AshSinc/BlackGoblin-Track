@@ -30,13 +30,12 @@ import common as c
 
 import tensorflow_addons as tfa
 
-
 if __name__ == "__main__":
     img_w = 240
     img_h = 240
     #model_file = "arch1_epochs20_optsgd_best"
-    model_file = "arch7_epochs20_optsgd"
-    OUTPUT_DIR = "outputs"
+    model_file = "outputs/models/arch7_epochs40_optsgd"
+    OUTPUT_DIR = "outputs/predict/"
 
     print("\n\n\n")
     physical_devices = tf.config.experimental.list_physical_devices('GPU')
@@ -108,13 +107,13 @@ if __name__ == "__main__":
     #print(y_true)
 
     cm = confusion_matrix(y_true, y_pred, labels=list(test_it.class_indices.values()))
-    c.pictureConfusionMatrix(cm, list(test_it.class_indices.keys()))
+    c.pictureConfusionMatrix(cm, list(test_it.class_indices.keys()),figureName=OUTPUT_DIR+"confusion_matrix.png")
     f1 = f1_score(y_true, y_pred, average='micro')
     f1_all = f1_score(y_true, y_pred, average=None)
     mcc = matthews_corrcoef(y_true, y_pred)
     acc = accuracy_score(y_true, y_pred, normalize=True)
     
-    with open(OUTPUT_DIR+'/predictions.txt', 'w') as f:
+    with open(OUTPUT_DIR+'predictions.txt', 'w') as f:
         
         f.writelines("The stats for model in {}:".format(model_file))
         #f.writelines("Here is the confusion matrix with labels {}".format(list(test_it.class_indices.keys())))

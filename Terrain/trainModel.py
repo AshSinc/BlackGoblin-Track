@@ -294,8 +294,6 @@ def decideDataGeneration(dataGenType=0):
         )
     return datagen
 
-
-
 """
 No command line options for this one yet because this is the file that does the heavy lifting.
 You need a dataset with test/train split and, under that, labels.
@@ -316,7 +314,6 @@ All results will be reported via the command line.
 
 
 """
-
 
 if __name__ == "__main__":
     img_w = 240
@@ -384,11 +381,9 @@ if __name__ == "__main__":
     bestMCCmodel = 0
     bestAccuracyModel = 0
 
-
-
     # Note there is a list of tests, but you can also define only 1 test in the list if you want!
     #listOfTests = [[architectureNumber, epochs, optimiser],]
-    listOfTests = [ [7, 10, "sgd" ],
+    listOfTests = [ [7, 1, "sgd" ],
                   #  [1, 20, "adam2" ],
     #                [1, 20, "sgd" ]
     ]

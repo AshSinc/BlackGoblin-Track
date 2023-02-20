@@ -11,11 +11,3 @@ RUN pip install tabulate
 RUN pip install seaborn
 
 RUN pip install tensorflow_addons
-
-#VOLUME [ "./:/tmp" ]
-
-#WORKDIR /tmp
-
-#CMD ["bash"]
-
-#podman-compose --podman-run-args="--security-opt=label=disable --gpus all --rm" run bg-track

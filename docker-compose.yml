@@ -4,7 +4,12 @@ services:
   bg-track:
     build: .
     volumes:
-    - ./:/actual_project_dir:z
+    - ./:/actual_project_dir:z # linux with podman
+    #- ./:/actual_project_dir # may have to remove the :z for windows and docker
     working_dir: /actual_project_dir
   
-#$PWD:/tmp
+#start up command for linux (have to work around extra security permissions and explicitly pass gpu)
+#podman-compose --podman-run-args="--security-opt=label=disable --gpus all --rm" run bg-track
+
+#should start up in windows
+#docker compose run --rm bg-track
