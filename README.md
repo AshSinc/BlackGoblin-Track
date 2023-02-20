@@ -1,8 +1,10 @@
 # BlackGoblin-Track
 
+This repository is the result of a short investigation into classification of ground type and footwear, combined with object tracking for the purpose of automatated audio dubbing of footsteps in video.
+
 ## **Usage**
 
-### **Dataset Prep**
+### **1. Dataset Prep**
 
 Download GTOS dataset from https://1drv.ms/u/s!AmTf4gl42ObncLmEnEv4R5LyxT4?e=ekkFfX and extract to resources folder. So the structure should appear like this:
 
@@ -30,13 +32,13 @@ Terrain/gtos_keras/
     └── veg
 ```
 
-### **Terrain Classifier Training**
+### **2. Terrain Classifier Training**
 
 The terrain classifier environment requires an updated pip and a number of modules. 
 
 ```
 python -m pip install --upgrade pip
-pip install tensorflow scikit-learn tabulate seaborn tensorflow_addons
+pip install tensorflow-gpu scikit-learn tabulate tensorflow_addons
 ```
 
 If you run into problems getting tensorflow installed with GPU acceleration, there is a docker-compose file provided that should help to get a working environment. Run one of the commands below depending on OS. **Note** You may need to modify the volumes path in docker-compose.yml and remove the :z from the end of the path as this is linux specific.
@@ -50,9 +52,15 @@ docker compose run --rm bg-track
 
 From either the containerised environment or from your live environment you can now train the model by running `python Terrain/trainModel.py`. Once complete this will save the model to outputs/models for use in the tracker.
 
-### **Tracker with terrain prediction**
+### **3. Tracker with terrain prediction**
 
 **The tracker cannot be run from the container as it has some interactive elements that require a GUI. (still requires tensorflow etc as before, but as the model is already trained GPU accel is not as important)**
+
+Install dependencies:
+
+```bash
+pip install opencv-contrib-python numpy seaborn matplotlib
+```
 
 The Track/track_multi_terrain.py file contains a variable called **MODEL_FILE**. This should be modified to point to the model output by the trainModel.py step above.
 
@@ -73,11 +81,25 @@ Upon running the command the first frame will be shown and allow the user to dra
 
 Outputs consist of a txt file where each entry looks like `obj: 0, y: 483, p: [0], t: 2035.3`. This means object 0, ie the first tracked object selected, is at y position 483 pixels, and the ground type below the object is predicted to be class index 0, at time 2035.3 milliseconds. Classes are hard_stone, loose_stone, soft, veg as noted in previous section, indexes are in alphabetical order.
 
-## **Abstract**
-
-This repository is the result of a short investigation into classification of footwear and ground type, combined with object tracking for the purpose of automatated audio dubbing of footsteps in video.
+## **Overview**
 
 The problem can be split into 3 main categories. Footwear classification, ground type classification, and object tracking of individual feet.
+
+The instructions above walk through training a basic ground type classifier based on the GTOS dataset. This classifier model is then used inside a tracking loop with OpenCV to track each selected object within a given timeframe of a video.
+
+For each frame and each object we track the y position in pixels over time and plot to a graph.
+
+<p float="left">
+  <img src="resources/images/output1.gif" height="300" />
+  <img src="resources/images/graph1.png" height="300" />
+  <br>(Left) Example tracking output frame. Blue box is the tracked object. Green box is the cropped region passed to ground classifier. (Right) Subsequent tracking. Y axis is y position in pixels, X axis is frame.
+</p>
+
+<p float="left">
+  <img src="resources/images/output2.gif" height="300" />
+  <img src="resources/images/graph2.png" height="300" />
+  <br>Another example showing a different gait and correct classification of vegetation ground type.
+</p>
 
 ## **Footwear Classification**
 

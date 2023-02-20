@@ -46,6 +46,10 @@ START_TIME = 0
 END_TIME = math.inf
 NUM_TO_TRACK = 1
 
+SHOULD_SHOW_CLASS = True
+
+GROUND_CLASSES = ["hard_stone", "loose_stone", "soft", "veg"]
+
 for opt in opts :
     if opt[0] == '-i' : VID_PATH = opt[1]
     if opt[0] == '-s' : START_TIME = int(opt[1])*1000
@@ -149,13 +153,16 @@ while (video.get(cv2.CAP_PROP_POS_MSEC) <= END_TIME):
             #predict
             probabilities = model.predict(input_arr)
             predicted_class = np.argmax(probabilities, axis=-1)
+
+            if(SHOULD_SHOW_CLASS):
+                cv2.putText(frame, GROUND_CLASSES[int(predicted_class)], p3, cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255), 1)
+
             print(predicted_class)
 
             f.write("obj: {}, y: {}, p: {}, t: {}\n".format(index, center[1], predicted_class, video.get(cv2.CAP_PROP_POS_MSEC)))
 
         else:
-            cv2.putText(frame, "Tracking failure detected", (100,80), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.75,(0,0,255),2)
+            cv2.putText(frame, "Tracking failure detected", (100,80), cv2.FONT_HERSHEY_SIMPLEX, 0.75,(0,0,255),2)
             
     cv2.imshow("Tracking", frame)
     output.write(frame)
