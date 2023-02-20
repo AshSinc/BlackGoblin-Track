@@ -90,22 +90,104 @@ The instructions above walk through training a basic ground type classifier base
 For each frame and each object we track the y position in pixels over time and plot to a graph.
 
 <p float="left">
-  <img src="resources/images/output1.gif" height="300" />
-  <img src="resources/images/graph1.png" height="300" />
+  <img src="resources/images/output1.gif" height="200" />
+  <img src="resources/images/graph1.png" height="200" />
   <br>(Left) Example tracking output frame. Blue box is the tracked object. Green box is the cropped region passed to ground classifier. (Right) Subsequent tracking. Y axis is y position in pixels, X axis is frame.
 </p>
 
 <p float="left">
-  <img src="resources/images/output2.gif" height="300" />
-  <img src="resources/images/graph2.png" height="300" />
+  <img src="resources/images/output2.gif" height="200" />
+  <img src="resources/images/graph2.png" height="200" />
   <br>Another example showing a different gait and correct classification of vegetation ground type.
 </p>
+
+<p float="left">
+  <img src="resources/images/output3.gif" height="200" />
+  <img src="resources/images/graph3.png" height="200" />
+  <br>Shows realtime detection between surfaces. Tracker cannot track the other foot probably due to the faster motion and the change of shape. Also shows occlusion problem when feet cross.
+</p>
+
+## **Ground Type Classification**
+
+To build a classification model to differentiate ground types, we found a number of material datasets. The most promising for our use case being GTOS and GTOS-Mobile.
+
+### **Datasets**
+
+**GTOS** - https://ieeexplore.ieee.org/document/9200748 <br>
+Ground Terrain in Outdoor Scenes dataset. 30k images and 39 classes.
+
+**GTOS-Mobile** - https://arxiv.org/pdf/1803.10896v1.pdf <br>
+Ground Terrain in Outdoor Scenes Mobile dataset. 81 videos and 31 classes.
+
+<img src="resources/images/gtos.png" width="500" />
+
+Due to time constraints we worked with GTOS only. We reduced the number of classes from 39 down to 4 primary catagories, Hard_Stone, Loose_Stone, Soft and Vegetation. These catagories were chosen based on the likelyhood of similar sounds being produces. These catagories were then used to group the existing GTOS classes together. Some classes were ommited like painting_cover and steel which had static identifying marks in the training images.
+
+```
+hard_stone : asphalt, brick, cement, stone_brick, stone_cement
+loose_stone : asphalt_stone, pebble, stone_asphalt, stone_mud
+veg : dry_grass, dry_leaf, grass, leaf, moss, mud, turf
+soft : sand, soil, wood_chips
+```
+
+### **Classifier**
+
+We use a simple LeNet architecture consisting of two convolution layers with 5x5 kernel with a dimensionality output of 32. With a maximum of 40 epochs (early stopping on val_catagorical_accuracy, min delta 0.01, patience of 5, resulted in stopping around 25 epochs).
+
+```
+Super simple LeNet
+Model: "sequential"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv2d (Conv2D)             (None, 236, 236, 32)      2432      
+                                                                 
+ activation (Activation)     (None, 236, 236, 32)      0         
+                                                                 
+ conv2d_1 (Conv2D)           (None, 232, 232, 32)      25632     
+                                                                 
+ activation_1 (Activation)   (None, 232, 232, 32)      0         
+                                                                 
+ flatten (Flatten)           (None, 1722368)           0         
+                                                                 
+ dense (Dense)               (None, 64)                110231616 
+                                                                 
+ activation_2 (Activation)   (None, 64)                0         
+                                                                 
+ dense_1 (Dense)             (None, 4)                 260       
+                                                                 
+ activation_3 (Activation)   (None, 4)                 0         
+                                                                 
+=================================================================
+Total params: 110,259,940
+Trainable params: 110,259,940
+Non-trainable params: 0
+```
+
+Prediction on test sets test1.txt and test2.txt from GTOS datasets show around 80% f1 score for 3 of the classes. Soft class (sand soil mud etc) scored poorly. This can also be seen clearly on the confusion matrix.
+
+```
+                   precision recall   f1-score   support
+  hard_stone       0.69      0.86      0.76      1311
+ loose_stone       0.69      1.00      0.82       456
+        soft       0.44      0.13      0.20       399
+         veg       0.94      0.74      0.83      1197
+
+    accuracy                           0.75      3363
+   macro avg       0.69      0.68      0.65      3363
+weighted avg       0.75      0.75      0.73      3363
+```
+
+<img src="resources/images/confusion_matrix.png" width="500" />
+<br>Confusion matrix predicting the first two test sets (test1.txt and test2.txt). Hard stone and loose stone are generally well predicted. Soft, which includes sand and dirt and other small particles, is very poor.<br>
+<br>
+Given that this model is a simple architecture and only using a subset of images from one dataset, accuracy here could be greatly increased with more training data and additional effort.
 
 ## **Footwear Classification**
 
 To build a classification model to differentiate footwear types, we need a labelled dataset of footwear. We found "Fashion MNIST", "Shoe Dataset", and "UT Zappos50k".
 
-### **Dataset**
+### **Datasets**
 
 **Fashion MNIST** - https://www.kaggle.com/datasets/zalando-research/fashionmnist?resource=download&select=fashion-mnist_train.csv <br>
 Fashion MNIST consists of 70k images of 28x28 greyscale. Although only a small subset of these are footwear, and only sneaker and boots are labelled.
@@ -136,18 +218,7 @@ The Pose directory in this repo contains the python scripts required to convert 
 
 <img src="resources/images/062329813.jpg" width="500" /><br>Obscured annotation with MPII Pose. This does not work and would require manual removal from the dataset.
 
-So there are two problems here. The dataset does not tell us if the feet themselves are obscured. If this was a statistically insignificant number it may not matter, but of the first 100 images roughly 40% were obscured in some way. Another issue is that if we are to use these generated images to augment the existing training data, we would still need to label the shoe type manually. This means that manually labelling is looking more like a necessity for accurate shoe classification.
+There are two major problems here. The dataset does not tell us if the feet themselves are obscured. If this was a statistically insignificant number it may not matter, but of the first 100 images roughly 40% were obscured in some way. Another issue is that if we are to use these generated images to augment the existing training data, we would still need to label the shoe type manually. This means that manually labelling is looking more like a necessity for accurate shoe classification.
 
-............................Ideally we would have panoramic views of every shoe type in varying lighting conditions and then train a classifier on these types. But the dataset does not yet exist.
+## **Final Comments**
 
-## **Ground Type Classification**
-
-Limitations : Note that the model does not yet classify soft materials (sand soil mud etc) accurately. This could likely be improved with more data.
-
-### **Dataset**
-
-### **Classifier**
-
-## **Object Tracking**
-
-### **Model**

@@ -383,7 +383,7 @@ if __name__ == "__main__":
 
     # Note there is a list of tests, but you can also define only 1 test in the list if you want!
     #listOfTests = [[architectureNumber, epochs, optimiser],]
-    listOfTests = [ [7, 1, "sgd" ],
+    listOfTests = [ [7, 30, "sgd" ],
                   #  [1, 20, "adam2" ],
     #                [1, 20, "sgd" ]
     ]

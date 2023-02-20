@@ -43,7 +43,7 @@ MODEL_FILE = "outputs/models/arch7_epochs40_optsgd"
 VID_PATH = "./resources/People Walking Free Stock Footage.mp4"
 
 START_TIME = 0
-END_TIME = math.inf
+END_TIME = int(sys.maxsize)
 NUM_TO_TRACK = 1
 
 SHOULD_SHOW_CLASS = True
@@ -64,6 +64,19 @@ video = cv2.VideoCapture(VID_PATH)
 if not video.isOpened() :
     print("Video file not found")
     exit()
+
+if END_TIME == int(sys.maxsize) :
+    # count the number of frames
+    frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
+    fps = video.get(cv2.CAP_PROP_FPS)
+    
+    # calculate duration of the video
+    seconds = round(frames / fps)
+    #video_time = datetime.timedelta(seconds=seconds)
+    #print(f"duration in seconds: {seconds}")
+    #print(f"video time: {video_time}")
+    END_TIME = seconds*1000
+    print(seconds)
 
 video.set(cv2.CAP_PROP_POS_MSEC, START_TIME)
 
@@ -106,7 +119,7 @@ model = keras.models.load_model(MODEL_FILE)
 # Start tracking
 print("starting")
 
-while (video.get(cv2.CAP_PROP_POS_MSEC) <= END_TIME):
+while (video.get(cv2.CAP_PROP_POS_MSEC) < END_TIME):
     success, original_frame = video.read()
     frame = original_frame.copy()
 
