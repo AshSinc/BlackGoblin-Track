@@ -121,7 +121,7 @@ Ground Terrain in Outdoor Scenes Mobile dataset. 81 videos and 31 classes.
 
 <img src="resources/images/gtos.png" width="500" />
 
-Due to time constraints we worked with GTOS only. We reduced the number of classes from 39 down to 4 primary catagories, Hard_Stone, Loose_Stone, Soft and Vegetation. These catagories were chosen based on the likelyhood of similar sounds being produces. These catagories were then used to group the existing GTOS classes together. Some classes were ommited like painting_cover and steel which had static identifying marks in the training images.
+Due to time constraints we worked with GTOS only. We reduced the number of classes from 39 down to 4 primary catagories, Hard_Stone, Loose_Stone, Soft and Vegetation. These catagories were chosen based on the likelyhood of similar sounds being produced. These catagories were then used to group the existing GTOS classes together. Some classes were ommited like painting_cover and steel which had static identifying marks in the training images.
 
 ```
 hard_stone : asphalt, brick, cement, stone_brick, stone_cement
@@ -181,7 +181,7 @@ weighted avg       0.75      0.75      0.73      3363
 <img src="resources/images/confusion_matrix.png" width="500" />
 <br>Confusion matrix predicting the first two test sets (test1.txt and test2.txt). Hard stone and loose stone are generally well predicted. Soft, which includes sand and dirt and other small particles, is very poor.<br>
 <br>
-Given that this model is a simple architecture and only using a subset of images from one dataset, accuracy here could be greatly increased with more training data and additional effort.
+Given that this model is a simple architecture and only using a subset of images from one dataset, accuracy here could be greatly increased with more training data and additional effort. 
 
 ## **Footwear Classification**
 
@@ -202,13 +202,13 @@ UT Zappos50k dataset seemed the most promising consisting of 50k images categori
 
 ### **Classifier**
 
-Because YOLO can perform fast object tracking and identification, we experimented with transfer learning with yolov5 small and large networks using pretrained weights. We provided the model with train test split of UT Zappos50k data converted to YOLO format. It quickly became aparent that the model would not transfer well to real world examples, likely due to the identical orientation and lighting of each shoe in the dataset, and for some the fact that no feet were inside of them (strappy heels and sandals). 
+Because YOLO can perform fast object tracking and identification, we experimented with transfer learning with yolov5 small and large networks using pretrained weights. We provided the model with train test split of UT Zappos50k data converted to YOLO format. It quickly became aparent that the model would not transfer well to real world examples, likely due to the identical orientation and lighting of each shoe in the dataset, and for some instances, the fact that no feet were inside of them (strappy heels and sandals). 
 
-We attempted to resolve this by augmenting the dataset in a number of ways such as changing background colour, skewing or rotating images and greyscaling the image before passing for training. However in the vast majority of cases YOLO could not find the shoe, even in an image filled with shoes, and when it did it would frequently misidentify.
+We attempted to resolve this by augmenting the dataset in a number of ways such as changing background colour, skewing or rotating images and greyscaling the image before passing for training. However in the vast majority of cases YOLO could not find the shoe, even in an image filled with shoes. On the rare occasions it detected a shoe it would frequently misidentify.
 
 ### **Generating more data with Pose estimation dataset**
 
-Another idea was to augment our existing Zappos dataset by providing it with annotated "Shoes in the wild" images. As it would be very time consuming to collect a significant number and annotate manually we opted to scrape the data from a pose estimation dataset, MPII Human Pose Dataset.
+Another approach explored was to augment our existing Zappos dataset by providing it with annotated "Shoes in the wild" images. As it would be very time consuming to collect a significant number and annotate manually we opted to scrape the data from a pose estimation dataset, MPII Human Pose Dataset.
 
 **MPII Human Pose Dataset** - http://human-pose.mpi-inf.mpg.de/
 
@@ -220,5 +220,28 @@ The Pose directory in this repo contains the python scripts required to convert 
 
 There are two major problems here. The dataset does not tell us if the feet themselves are obscured. If this was a statistically insignificant number it may not matter, but of the first 100 images roughly 40% were obscured in some way. Another issue is that if we are to use these generated images to augment the existing training data, we would still need to label the shoe type manually. This means that manually labelling is looking more like a necessity for accurate shoe classification.
 
-## **Final Comments**
+## **Future Work**
 
+### **Tracker**
+
+Interestingly, given the 3 examples graphed in the previous section, it appears it may be possible to derive more information than just contact time and pacing, such as intensity of contact. Comparing the first (woman on wall) and second (woman on grass) graphs, we can see the woman on wall is placing her foot down with more force, this is reflected by a steeper gradient in the graph. The woman on the grass has a different gait however, and only the second trough represents the foot actually being placed down, but we can still see on the second declination, a shallower angle, which represents a gentler placement. 
+
+The third graph shows a very chaotic example, but even this could potentially be used to produce a good estimate of sound. Lots of small chaotic movements on a hard stone surface would produce a lot of short "scuffs". This short test implies that the appearance of a graph can likely inform how they should sound.
+
+Further research can be conducted in this area to determine if it is possible to reconstruct sensible sound representations from the visual data, and how this can best be achieved. 
+
+The occlusion problem is a common issue with object tracking. Another issue is uniformity. When detecting two feet in motion we suffer from both issues. When two feet cross over, which they will do frequently, the tracker will not know that the rear foot is now behind the front foot, because of uniformity of the feet. So in effect two trackers that start on individual feet will end up tracking one foot. This is a challenging problem and would require further research to find a suitable solution.
+
+### **Alternative to tracker - Pose estimator**
+
+If a tracker cannot be used to resolve the issue adequetly, then perhaps a pose estimation model could. If we could estimate pose accurately for each frame using an existing model, we could derive ankle or feet positions from this. I believe this has the potential to solve the problem, although it does depend on accuracy of existing models. Further time could be spent investigating this area of research in order to identify efficacy of such an approach.
+
+### **Ground Classifier**
+
+The ground surface classifier could be greatly improved with more data and more work. Training with more data, specifically to target the softer surfaces and introduce new surfaces, like metal and snow, would allow for a wider array of possible classifications and use cases.
+
+### **Footwear Classifier**
+
+Finally, accurate detection of shoe type requires a model trained on a labelled dataset. Currently no useable dataset exists. So a potential area of work is to manually collect a dataset for this explicit purpose. This would be time consuming work but it is likely the only way to automate this aspect. 
+
+One approach would be to work on the above areas (like tracking/pose estimation) to derive meaningful bounding boxes around the feet, specify manually the shoe type at runtime, and store the resulting annotated frames for future use. These annotated frames could then form the basis of a future dataset and shoe classification model.
